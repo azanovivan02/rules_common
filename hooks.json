@@ -3,10 +3,10 @@
     "hooks": {
         "afterFileEdit": [
             {
-                "command": "conda run -n vvchat_v2 python /Users/azanovivan/projects/datalab/vvchat/vvchat/scripts/cursor_hooks/launch_ty_check.py --path /Users/azanovivan/projects/datalab/vvchat/vvchat/src"
+                "command": "/Users/azanovivan/miniconda3/envs/vvchat_v2/bin/python /Users/azanovivan/projects/datalab/vvchat/vvchat/scripts/cursor_hooks/launch_ty_check.py --path /Users/azanovivan/projects/datalab/vvchat/vvchat/src"
             },
             {
-                "command": "conda run -n vvchat_v2 python /Users/azanovivan/projects/datalab/vvchat/vvchat/scripts/cursor_hooks/launch_ruff_check.py --path /Users/azanovivan/projects/datalab/vvchat/vvchat/src"
+                "command": "/Users/azanovivan/miniconda3/envs/vvchat_v2/bin/python /Users/azanovivan/projects/datalab/vvchat/vvchat/scripts/cursor_hooks/launch_ruff_check.py --path /Users/azanovivan/projects/datalab/vvchat/vvchat/src"
             }
         ]
     }
