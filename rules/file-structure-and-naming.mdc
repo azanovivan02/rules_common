@@ -1,0 +1,30 @@
+---
+description: "File structure and naming rules for maximizing semantic retrieval accuracy."
+globs: "**/*"
+alwaysApply: true
+---
+
+## RAG & INDEXING OPTIMIZATION
+**GOAL**: Maximize semantic retrieval accuracy for Cursor's vector database and agentic routing.
+
+### 1. FILE STRUCTURE (MANDATORY)
+* **Header**: Every file MUST start with this semantic anchor to route the Agent:
+    ```python
+    """
+    FILE: {filename}
+    CONTEXT: {Domain} > {Sub-Domain} > {Specific Feature}
+    DESC: {Concise summary of purpose, key logic, and business value. Mention critical deps.}
+    TAGS: {comma, separated, keywords, synonyms, concepts}
+    """
+    ```
+* **Collocation**: Keep *tightly coupled* types/constants inside the consuming file. Do NOT split strict dependencies unless reused 3+ times.
+* **Limit**: Soft cap ~250 lines. If larger, split by *feature domain*, not technical layer.
+
+### 2. SEMANTIC NAMING ("Breadcrumbs")
+* **Rule**: Variable names must carry domain context. The Vector DB retrieves isolated chunks; generic names kill context.
+* **Bad**: `data`, `item`, `res`, `df`, `handle()`
+* **Good**: `revenue_series`, `cart_item`, `api_response`, `sales_df`, `handle_payment_webhook()`
+
+### 3. CHUNK CONTEXT INJECTION
+* **Function Docs**: Do NOT rely on file-level summaries for deep logic. Every complex function (>10 lines) requires a docstring explaining *what* and *why*.
+* **Explicit Typing**: Use explicit type hints in arguments (e.g., `user: UserProfile` vs `user`). This binds the chunk to the Type concept even if the Type definition is in another file.

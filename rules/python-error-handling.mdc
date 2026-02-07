@@ -1,0 +1,99 @@
+---
+description: "Standards for Python Error Handling (Result/Failure Pattern)"
+globs: "**/*.py"
+---
+
+# Python Error Handling Standards
+
+**Context:**
+This project eschews standard Python exceptions for domain logic in favor of a functional `Result` pattern (only for new code; legacy code is exempt).
+We treat errors as values (`Failure` objects) rather than control flow interruptions.
+
+**Reference Implementation:**
+
+- Location: `result_type.py`
+- Types: `Result[T]`, `Failure`
+- Decorators: `@safe`, `@safe_async`
+
+## 1. The Golden Rule
+
+**NEVER** raise exceptions for anticipated domain errors (e.g., "User not found", "Validation failed").
+**ALWAYS** return `Result[T]` (which is `T | Failure`).
+
+## 2. Usage Patterns
+
+### ✅ PREFERRED: Linear "Do-Notation"
+
+Use early returns to keep the "happy path" unindented.
+
+```python
+from src.core.result import Result, Failure
+
+def process_order(order_id: int) -> Result[Order]:
+    # 1. Check/Validate (Early Return)
+    if order_id <= 0:
+        return Failure("Invalid Order ID")
+
+    # 2. Perform Action
+    order = database.get(order_id)
+    if not order:
+        return Failure("Order not found", context={"id": order_id})
+
+    # 3. Return Success
+    return order
+
+```
+
+### ✅ PREFERRED: Pattern Matching (Caller Side)
+
+Always unpack results using `match`.
+
+```python
+match process_order(123):
+    case Failure(msg, ctx, exc):
+        logger.error(f"Failed: {msg}", exc_info=exc)
+        return APIResponse(500, error=msg)
+    case order:
+        return APIResponse(200, data=order)
+
+```
+
+### ❌ FORBIDDEN: Try/Except Logic
+
+Do not use try/except for logic flow. Only use it at the "system boundary" (wrapping 3rd party libs) via decorators.
+
+```python
+# BAD
+try:
+    user = get_user(id)
+except UserNotFoundError:
+    return None
+
+
+# GOOD
+@safe(UserNotFoundError)
+def get_user(id) -> Result[User]:
+    ...
+
+```
+
+## 3. Boundary Crossing
+
+When calling external libraries (Requests, SQLAlchemy, Pydantic) that raise exceptions, you **MUST** wrap them:
+
+1. **Declarative:** Use `@safe(ErrorType)` or `@safe_async(ErrorType)` on the function definition.
+2. **Imperative:** If inline, catch and wrap immediately.
+
+```python
+try:
+    return complex_calculation()
+except ZeroDivisionError as e:
+    # ALWAYS pass the original exception to Failure for traceback preservation
+    return Failure("Calculation failed", exception=e)
+
+```
+
+## 4. Type Annotations
+
+* Always explicitly type the return: `-> Result[User]`
+* Never type as `-> User | Failure` manually; use the alias `Result`.
