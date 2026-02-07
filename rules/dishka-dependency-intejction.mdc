@@ -1,0 +1,96 @@
+---
+description: "Dishka Dependency Injection Best Practices"
+---
+## General Dishka Architecture
+
+*Applies to Background Tasks, CLI, and Core Logic*
+
+### Scope Management
+
+**Define Scopes Explicitly**
+Assign `Scope.APP` to stateful singletons (DB pools, Config).
+Assign `Scope.REQUEST` to transient objects (Unit of Work).
+Never inject `REQUEST` objects into `APP` services.
+This prevents `ScopeDivergenceError` runtime failures.
+
+**Use Async Containers**
+Construct containers using `make_async_container`.
+Avoid blocking the event loop during initialization.
+Ensure I/O-bound resources resolve asynchronously.
+
+### Provider Design
+
+**Group by Domain**
+Split providers by technical responsibility (e.g., `AuthProvider`).
+Avoid monolithic `Provider` classes.
+Isolate dependencies for easier visualization.
+
+**Enforce Type Hints**
+Annotate every factory parameter precisely.
+Avoid `Any` or generic types.
+Use `provide(Concrete, provides=Abstract)` for interfaces.
+Dishka relies strictly on types for auto-wiring.
+
+**Isolate Configuration**
+Inject Pydantic `BaseSettings` as a dependency.
+Do not access global config variables inside providers.
+This enables easy config swapping during tests.
+
+### Testing & Performance
+
+**Override Providers**
+Do not mock individual classes manually.
+Create `TestProvider` inheriting from production providers.
+Swap components via `make_async_container(TestProvider(), ...)`.
+
+**Optimize Test Resources**
+Use `Scope.APP` for test database engines.
+Spin up heavy resources once per suite.
+Avoid tearing down pools between every test.
+
+**Avoid Service Locators**
+Do not inject `AsyncContainer` into business logic.
+Request only specific dependencies.
+Prevent "God Object" anti-patterns.
+
+**Cache Heavy Objects**
+Mark ML models or connections as `Scope.APP`.
+Ensure initialization happens only once.
+Check `__init__` logic for synchronous bottlenecks.
+
+---
+
+## FastAPI Integration
+
+*Applies strictly to Web/API Contexts*
+
+### Lifecycle Hooks
+
+**Use `setup_dishka**`
+Register integration in `main.py`.
+Call `setup_dishka(container, app)` on startup.
+This manages request scope entry/exit automatically.
+
+### Context Bridging
+
+**Leverage `from_context**`
+Use `from_context(provides=Request, scope=Scope.REQUEST)`.
+Bridge FastAPI natives into the Dishka graph.
+Avoid manual request extraction in factories.
+
+### Route Injection
+
+**Use `FromDishka**`
+Annotate route parameters with `FromDishka[Service]`.
+Resolve dependencies strictly from the container.
+Do not mix with FastAPI's native `Depends`.
+
+**Minimize `@inject**`
+Prefer `FromDishka` type hints over decorators.
+Keep route signatures standard.
+Reduce decorator clutter on endpoints.
+
+**Isolate Native Depends**
+Use FastAPI `Depends` only for `Security` or internal wiring.
+Do not force Dishka to resolve FastAPI sub-dependencies.
+Keep auth logic separate from business service injection.
