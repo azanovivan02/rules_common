@@ -12,7 +12,7 @@ We treat errors as values (`Failure` objects) rather than control flow interrupt
 **Reference Implementation:**
 
 - Location: `result_type.py`
-- Types: `Result[T]`, `Failure`
+- Types: `Result[T] = T | Failure`
 - Decorators: `@safe`, `@safe_async`
 
 ## 1. The Golden Rule
@@ -27,8 +27,6 @@ We treat errors as values (`Failure` objects) rather than control flow interrupt
 Use early returns to keep the "happy path" unindented.
 
 ```python
-from src.core.result import Result, Failure
-
 def process_order(order_id: int) -> Result[Order]:
     # 1. Check/Validate (Early Return)
     if order_id <= 0:
