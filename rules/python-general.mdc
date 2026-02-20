@@ -8,6 +8,18 @@ alwaysApply: false
 
 ## Coding Standards
 
+### CORE PHILOSOPHY: THE HYBRID ARCHITECTURE
+
+1. **Macro OOP, Micro FP**:
+    - Use **OOP** for architectural boundaries, service orchestration, and dependency injection.
+    - Use **FP** (Pure Functions) for business logic, data transformation, and algorithmic cores.
+2. **Imperative Shell, Functional Core**:
+    - Push I/O (DB, API, Disk) to the edges of the system (Controllers/Repositories).
+    - Keep the core logic pure, deterministic, and unit-testable without mocks.
+3. **Composition Over Inheritance**:
+    - Prefer `has-a` relationships. Avoid class inheritance deeper than 2 levels.
+    - Use `typing.Protocol` for interfaces, not `abc.ABC`.
+
 ### GENERAL STRUCTURE & BEST PRACTICES
 
 - **Colocation**:
@@ -27,18 +39,6 @@ alwaysApply: false
     - Avoid statements like `if not X`; use `if X is not None` instead.
     - Avoid re-exporting classes from other modules; always import them directly from their original location.
     - When overriding a method in a subclass, explicitly mark the method with decorator `@override` from `typing`.
-
-### CORE PHILOSOPHY: THE HYBRID ARCHITECTURE
-
-1. **Macro OOP, Micro FP**:
-    - Use **OOP** for architectural boundaries, service orchestration, and dependency injection.
-    - Use **FP** (Pure Functions) for business logic, data transformation, and algorithmic cores.
-2. **Imperative Shell, Functional Core**:
-    - Push I/O (DB, API, Disk) to the edges of the system (Controllers/Repositories).
-    - Keep the core logic pure, deterministic, and unit-testable without mocks.
-3. **Composition Over Inheritance**:
-    - Prefer `has-a` relationships. Avoid class inheritance deeper than 2 levels.
-    - Use `typing.Protocol` for interfaces, not `abc.ABC`.
 
 ### PYTHON MODERN STANDARDS
 
