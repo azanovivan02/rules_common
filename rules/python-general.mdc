@@ -77,6 +77,8 @@ alwaysApply: false
 
 ### GENERAL STRUCTURE & BEST PRACTICES
 
+- **Colocation**:
+    - Put related functions, classes and variables into the same file if possible, maximize physical cohesion (needed for better Cursor IDE rag retrieval)
 - **Class definition**:
     - Avoid writing `__init__` methods manually, use `dataclasses`.
 - **Function structure**:
@@ -87,7 +89,6 @@ alwaysApply: false
 - **Order of declarations**:
     - Declare on top those methods which are imported by other files, then declare methods which are used in top
       methods (move from caller to callee, high-level to low-level).
-- **Type Hinting**: Mandatory for all function signatures.
 - **Logic**:
     - Avoid statements like `if not X`; use `if X is not None` instead.
     - Avoid re-exporting classes from other modules; always import them directly from their original location.
