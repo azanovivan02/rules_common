@@ -8,6 +8,26 @@ alwaysApply: false
 
 ## Coding Standards
 
+### GENERAL STRUCTURE & BEST PRACTICES
+
+- **Colocation**:
+    - Put related functions, classes and variables into the same file if possible, maximize physical cohesion (needed
+      for better Cursor IDE rag retrieval)
+- **Class definition**:
+    - Avoid writing `__init__` methods manually, use `dataclasses`.
+- **Function structure**:
+    - Prefer pure functions (but they may use temporary local state).
+    - Decompose large functions into reasonably small subfunctions with clearly defined roles.
+    - Avoid cases when local variables are used inside a small segment of a large function then hang uselessly inside
+      the scope. Decompose into smaller functions so short-term variables are contained.
+- **Order of declarations**:
+    - Declare on top those methods which are imported by other files, then declare methods which are used in top
+      methods (move from caller to callee, high-level to low-level).
+- **Logic**:
+    - Avoid statements like `if not X`; use `if X is not None` instead.
+    - Avoid re-exporting classes from other modules; always import them directly from their original location.
+    - When overriding a method in a subclass, explicitly mark the method with decorator `@override` from `typing`.
+
 ### CORE PHILOSOPHY: THE HYBRID ARCHITECTURE
 
 1. **Macro OOP, Micro FP**:
@@ -19,6 +39,26 @@ alwaysApply: false
 3. **Composition Over Inheritance**:
     - Prefer `has-a` relationships. Avoid class inheritance deeper than 2 levels.
     - Use `typing.Protocol` for interfaces, not `abc.ABC`.
+
+### CODE STYLE & LINTING
+
+- **Formatting**: Adhere to `ruff` defaults.
+- **Imports**:
+    - No wildcard imports (`from module import *`).
+    - Use absolute imports.
+- **Naming**:
+    - Variables: `snake_case` (descriptive, e.g., `user_id` not `x`).
+    - Classes: `PascalCase`.
+    - Constants: `UPPER_SNAKE_CASE`.
+- **Path Handling**: Always use `pathlib.Path`, never `os.path`.
+
+### "ANTI-PATTERNS" TO AVOID
+
+- **Deep Inheritance**: Do not create generic "BaseHandler" classes.
+- **God Objects**: No "Manager" or "Util" classes that do everything.
+- **Primitive Obsession**: Do not pass raw dicts or tuples. Wrap them in Typed objects.
+- **Point-Free Obsession**: Do not remove function arguments if it hurts readability.
+- **Mutable Defaults**: Never use `def func(x=[])`.
 
 ### PYTHON 3.14 MODERN STANDARDS
 
@@ -54,45 +94,6 @@ alwaysApply: false
 - **Generators**:
     - Use generator expressions `(...)` for streaming data processing to save memory.
     - Only materialize to `list` or `polars.DataFrame` at the final step.
-
-### CODE STYLE & LINTING
-
-- **Formatting**: Adhere to `ruff` defaults.
-- **Imports**:
-    - No wildcard imports (`from module import *`).
-    - Use absolute imports.
-- **Naming**:
-    - Variables: `snake_case` (descriptive, e.g., `user_id` not `x`).
-    - Classes: `PascalCase`.
-    - Constants: `UPPER_SNAKE_CASE`.
-- **Path Handling**: Always use `pathlib.Path`, never `os.path`.
-
-### "ANTI-PATTERNS" TO AVOID
-
-- **Deep Inheritance**: Do not create generic "BaseHandler" classes.
-- **God Objects**: No "Manager" or "Util" classes that do everything.
-- **Primitive Obsession**: Do not pass raw dicts or tuples. Wrap them in Typed objects.
-- **Point-Free Obsession**: Do not remove function arguments if it hurts readability.
-- **Mutable Defaults**: Never use `def func(x=[])`.
-
-### GENERAL STRUCTURE & BEST PRACTICES
-
-- **Colocation**:
-    - Put related functions, classes and variables into the same file if possible, maximize physical cohesion (needed for better Cursor IDE rag retrieval)
-- **Class definition**:
-    - Avoid writing `__init__` methods manually, use `dataclasses`.
-- **Function structure**:
-    - Prefer pure functions (but they may use temporary local state).
-    - Decompose large functions into reasonably small subfunctions with clearly defined roles.
-    - Avoid cases when local variables are used inside a small segment of a large function then hang uselessly inside
-      the scope. Decompose into smaller functions so short-term variables are contained.
-- **Order of declarations**:
-    - Declare on top those methods which are imported by other files, then declare methods which are used in top
-      methods (move from caller to callee, high-level to low-level).
-- **Logic**:
-    - Avoid statements like `if not X`; use `if X is not None` instead.
-    - Avoid re-exporting classes from other modules; always import them directly from their original location.
-    - When overriding a method in a subclass, explicitly mark the method with decorator `@override` from `typing`.
 
 ### EXAMPLES
 
