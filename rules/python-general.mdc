@@ -79,8 +79,6 @@ alwaysApply: false
 
 - **Class definition**:
     - Avoid writing `__init__` methods manually, use `dataclasses`.
-    - Define each class in separate file.
-    - Prefer to declare single class per file (unless it is a test class).
 - **Function structure**:
     - Prefer pure functions (but they may use temporary local state).
     - Decompose large functions into reasonably small subfunctions with clearly defined roles.
