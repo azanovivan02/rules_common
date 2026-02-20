@@ -2,23 +2,22 @@
 description: "Polars Best Practices, interaction with Pydantic and Patito"
 ---
 
-### Polars & Patito Integration Rules
+## Polars & Patito/Pydantic Integration Rules
 
-**Model Definition Rules**
+### Choosing Patito or Pydantic
 
-* **Subclass `pt.Model**` instead of `BaseModel` for dataframe validation.
-* **Enforce string matches** by utilizing `typing.Literal` for categorical data.
-* **Apply `pt.Field**` when adding Polars-specific constraint parameters.
+* If you anticipate heavy processing of arrays of objects (models), then declare models using Patito and convert to
+  Polars using the `DataFrame()` method when needed. Otherwise, use Pydantic models directly.
 
-**DataFrame Instantiation Patterns**
+### Creating DataFrames from list of Patito Models
 
-* **Convert lists of models** using strict dictionary extraction.
-* **Write conversions** as: `Model.DataFrame([obj.model_dump() for obj in objects])`. Put on same line comment `  # type: ignore[unresolved-attribute]` to suppress mypy warning for lack of `DataFrame` method.
+* **Convert lists of Patito models into Polars** using strict dictionary extraction.
+* **Write conversions** as: `Model.DataFrame([obj.model_dump() for obj in objects])`. Put on same line comment
+  `  # type: ignore[unresolved-attribute]` to suppress mypy warning for lack of `DataFrame` method.
 * **Bypass Polars type inference** by using the Patito constructor directly.
 * **Never pass** raw Pydantic DTOs directly into native `pl.DataFrame()`.
 
-**Empty DataFrames & Testing**
+### Empty DataFrames & Testing*
 
 * **Instantiate empty dataframes** with explicit types: `Model.DataFrame(schema=Model.dtypes)`.
 * **Prevent null coercion** by always passing the schema parameter for empty tables.
-* **Generate mock test data** automatically via the `Model.examples()` method.
