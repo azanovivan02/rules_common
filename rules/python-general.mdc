@@ -54,9 +54,6 @@ alwaysApply: false
 - **Generators**:
     - Use generator expressions `(...)` for streaming data processing to save memory.
     - Only materialize to `list` or `polars.DataFrame` at the final step.
-- **Notebook vs Production**:
-    - Notebook code is for exploration. Production code must be refactored into strict functions/classes.
-    - No global state or magic cells in `.py` files.
 
 ### CODE STYLE & LINTING
 
@@ -97,9 +94,6 @@ alwaysApply: false
     - Avoid statements like `if not X`; use `if X is not None` instead.
     - Avoid re-exporting classes from other modules; always import them directly from their original location.
     - When overriding a method in a subclass, explicitly mark the method with decorator `@override` from `typing`.
-- **Comments**:
-    - Avoid excessive obvious comments and docstrings.
-    - Rely on function names to communicate meaning.
 
 ### EXAMPLES
 
