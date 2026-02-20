@@ -40,27 +40,7 @@ alwaysApply: false
     - Prefer `has-a` relationships. Avoid class inheritance deeper than 2 levels.
     - Use `typing.Protocol` for interfaces, not `abc.ABC`.
 
-### CODE STYLE & LINTING
-
-- **Formatting**: Adhere to `ruff` defaults.
-- **Imports**:
-    - No wildcard imports (`from module import *`).
-    - Use absolute imports.
-- **Naming**:
-    - Variables: `snake_case` (descriptive, e.g., `user_id` not `x`).
-    - Classes: `PascalCase`.
-    - Constants: `UPPER_SNAKE_CASE`.
-- **Path Handling**: Always use `pathlib.Path`, never `os.path`.
-
-### "ANTI-PATTERNS" TO AVOID
-
-- **Deep Inheritance**: Do not create generic "BaseHandler" classes.
-- **God Objects**: No "Manager" or "Util" classes that do everything.
-- **Primitive Obsession**: Do not pass raw dicts or tuples. Wrap them in Typed objects.
-- **Point-Free Obsession**: Do not remove function arguments if it hurts readability.
-- **Mutable Defaults**: Never use `def func(x=[])`.
-
-### PYTHON 3.14 MODERN STANDARDS
+### PYTHON MODERN STANDARDS
 
 - **Strict Typing**: All functions must have type hints. Use `mypy` strict mode standards.
 - **Modern Syntax**:
@@ -68,6 +48,14 @@ alwaysApply: false
     - Use `|` for Unions (e.g., `str | None` instead of `Optional[str]`).
     - Use `match/case` for control flow over complex `if/elif` chains.
 - **Async By Default**: Use `async/await` for all I/O bound operations (DB, Network).
+
+### "ANTI-PATTERNS" TO AVOID
+
+- **Deep Inheritance**: Do not create generic "BaseHandler" classes.
+- **God Objects**: No "Manager" or "Util" classes that do everything.
+- **Primitive Obsession**: Do not pass raw dicts or tuples. Wrap them in Pydantic models.
+- **Point-Free Obsession**: Do not remove function arguments if it hurts readability.
+- **Mutable Defaults**: Never use `def func(x=[])`.
 
 ### DATA STRUCTURES & MODELING
 
@@ -94,6 +82,18 @@ alwaysApply: false
 - **Generators**:
     - Use generator expressions `(...)` for streaming data processing to save memory.
     - Only materialize to `list` or `polars.DataFrame` at the final step.
+
+### CODE STYLE & LINTING
+
+- **Formatting**: Adhere to `ruff` defaults.
+- **Imports**:
+    - No wildcard imports (`from module import *`).
+    - Use absolute imports.
+- **Naming**:
+    - Variables: `snake_case` (descriptive, e.g., `user_id` not `x`).
+    - Classes: `PascalCase`.
+    - Constants: `UPPER_SNAKE_CASE`.
+- **Path Handling**: Always use `pathlib.Path`, never `os.path`.
 
 ### EXAMPLES
 
