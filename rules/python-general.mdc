@@ -1,7 +1,7 @@
 ---
 description: "General Python and Software Engineering Standards"
 globs: "**/*.py"
-alwaysApply: false
+alwaysApply: true
 ---
 
 # General Python & Software Engineering Standards
