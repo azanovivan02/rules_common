@@ -1,0 +1,20 @@
+---
+description: "How to choose which library to use for Python data objects: dataclasses, Pydantic, Patito"
+globs: "**/*.py"
+---
+
+# General
+
+- Avoid using raw python dicts for data objects in all places: params, return values, collecting records into list for a batch (for converting into dataframe later), etc.
+- Declare classes with explicit named and typed fields using either `dataclasses`, `Pydantic`, or `Patito`. 
+- Use raw python dicts only for cases where it is impossible to use typed fields - for example, when dict contains dynamic keys, which are impossible to know in advance.
+
+# Choosing between dataclasses and Pydantic/Patito
+
+- If object has to contain field of polars.DataFrame type, then declare it using `dataclasses` via `dataclasses.dataclass(repr=False)`
+- Otherwise, use `Pydantic` or `Patito` models.
+
+# Choosing between Pydantic and Patito
+
+- If you anticipate heavy processing of arrays of data objects (such as filtering, mapping, data exploration, etc), then declare models using `Patito` and convert to `Polars` using the `patito.Model.DataFrame()` method when needed. 
+- Otherwise, use `Pydantic` models directly.
