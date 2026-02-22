@@ -1,0 +1,85 @@
+---
+description: "Backend: FastAPI, Chainlit, SQLModel, Architecture"
+globs: "**/*.py", "**/*.sql"
+alwaysApply: false
+---
+
+# Backend Architecture & Practices
+
+## Project structure and files overview
+
+### Delineation into containers
+
+Backend is divided into 3 containers, each with their own `Dockerfile` and python entry point.
+
+#### 1. 'Chainlit + custom react spa' container
+
+- main entry point: `src/vvchat/fa_main.py`
+- description: mounts chainlit app at `/chat` route
+- all new endpoints should be registered in `src/vvchat/fa_main.py`
+
+#### 2. Api container
+
+- main entry point: `vvchat.__main__:main_api`
+
+#### 3. Celery worker container
+
+- main entry point: `vvchat.__main__.main_worker`
+
+### Other files
+
+- `vvchat_schema.sql` - database schema, dumped from actual database using `pg_dump`
+
+## Tech Stack
+
+### Backend (Core)
+
+- **Language:** Python 3.12
+- **Server:** FastAPI (Main entry point)
+- **Validation:** Pydantic V2
+- **Chat UI/Logic:** Chainlit (Mounted as a sub-app under `/chat`)
+- **Database:** PostgreSQL (via SQLAlchemy ORM)
+- **CRUD:** sqlmodel (in cases where api entities map well to database schema)
+- **Migrations:** Alembic
+- **Caching:** Redis
+- **Async Tasks:** Celery (Strictly for background processing of file uploads/embeddings)
+
+## Architectural Rules
+
+### 1. FastAPI & Chainlit Integration
+
+- The FastAPI app is the "parent". Chainlit is mounted using `mount_chainlit` (or equivalent middleware integration) at
+  the `/chat` route.
+- API endpoints for space management (CRUD) live in FastAPI routers, not Chainlit scripts.
+- Register all new endpoints into fastapi app located `src/vvchat/fa_main.py`.
+- Chainlit scripts (`cl.on_chat_start`, etc.) should call into the shared service layer/business logic, not implement
+  database logic directly.
+- **Async:** Use `async def` for all FastAPI route handlers and Chainlit message handlers.
+
+### 2. Asynchronous Processing
+
+- **Strict Rule:** File processing (parsing PDFs, generating embeddings) must happen in the background using Celery.
+- The web server (FastAPI/Chainlit) should only accept the upload and trigger the Celery task. It should not block while
+  indexing occurs.
+
+## Backend Practices
+
+- **Stateless Services**:
+    - Service classes must be stateless.
+    - Avoid writing `__init__` methods manually, use `dataclasses`.
+    - Use constructor exclusively for Dependency Injection (Repository, Logger, Config), not for heavy initialization
+      logic.
+    - Method signatures should take all necessary data as arguments.
+- **Dependency Injection**:
+    - Inject dependencies as Protocols/Interfaces, not concrete classes.
+    - Use `functools.partial` to configure simple function-based dependencies.
+- **Structured Logging**:
+    - Use `structlog`.
+    - Log context (dictionaries), not formatted strings.
+    - `logger.info("event_name", user_id=123)` NOT `logger.info(f"User {123}")`.
+
+### RELATIONAL DATABASE INTERACTION
+
+- When working with `sqlmodel` and `sqlalchemy` ORM, use `col` wrapper functions in DSL expressions (reason: to avoid
+  false positives type checker linter).
+- **Validation:** Use Pydantic V2.

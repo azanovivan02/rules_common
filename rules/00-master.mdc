@@ -1,0 +1,37 @@
+---
+description: "Central rule file for the project"
+globs: "**/*"
+alwaysApply: true
+---
+
+# Critical Instructions
+
+- try to fix things at the root cause, not the symptom
+
+## Anti-Lazy Rule
+
+**Always output full file content. Do not use placeholders like `// ... existing code ...` or `# ... rest of code ...`.
+** When editing files, show the complete implementation, not truncated versions with ellipses.
+
+## Documentation flow Rules 
+
+- after finishing a task, write a short summary of the changes in markdown format in the `raw_cursor_notes` folder
+
+## Development flow Rules
+
+- At the start of any complex task, check if the Serena MCP tools are available and run prepare_for_new_conversation to sync with the project architecture
+- when executing a task, do not run python executables (e.g. for testing import correctness) because them may not work correctly when invoked by Composer Agent
+- when executing a task, do not run git commands or the following bash commands [ls, find]
+- when needing to run linters, do not run them (ruff, ty, mypy, etc.) via shell command, because them may not work correctly when invoked by Composer Agent
+- When the agent needs to perform an action that requires user approval, run the command "afplay /System/Library/Sounds/Glass.aiff" first to provide an audio alert
+
+## Other Rules
+
+- NEVER remove comments unless explicitly asked.
+- In Composer mode, focus on "surgical" edits; preserve existing patterns.
+- avoid putting trailing spaces on blank lines
+
+# Library Specific Guidelines
+
+- When writing or refactoring code involving `chainlit`: 
+  - You can reference docs and reports in directory`reference_docs_for_agents/chainlit`

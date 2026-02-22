@@ -1,0 +1,58 @@
+---
+description: [DEBUG MODE ONLY] Instructions for adding extensive full-stack tracing logs to pinpoint complex distributed system failures.
+alwaysApply: false
+---
+
+# 🚨 DEEP DEBUG MODE ACTIVATED
+
+**Objective:** Instrument the code to trace the exact flow of data and state from Frontend UI -> Network -> Backend API -> Database/LLM.
+
+## Reference
+This sheet extends `.cursor/rules/01-logging-standards.mdc`.
+
+## Frontend Instructions (Debug)
+
+1.  **Lifecycle Logging:**
+    * Add `useEffect` hooks to log component mounting and unmounting with unique IDs.
+    ```typescript
+    useEffect(() => {
+      logger.info('[Debug] Component Mount', { component: 'ChatInterface', spaceId })
+      return () => logger.info('[Debug] Component Unmount', { component: 'ChatInterface' })
+    }, [spaceId])
+    ```
+
+2.  **Trace Verification:**
+    * Before making critical API calls, log that the request is about to start.
+    * If using `fetch` manually (rare), explicitly log the headers to ensure `traceparent` is present (though `instrumentation.ts` handles injection, we verify logic here).
+
+3.  **State Dumps:**
+    * Log full state objects before mutations (be careful with PII).
+    ```typescript
+    logger.warn('[Debug] State Pre-Update', { oldState: someStore.getState() })
+    ```
+
+## Backend Instructions (Debug)
+
+1.  **Service Layer Tracing (@capture_context):**
+    * Apply the `@capture_context` decorator to *every* method in the suspicious call stack. This automatically logs entry/exit, arguments, and return values.
+    * **Import:** `from vvchat.app.core.capture_context import capture_context`
+    ```python
+    @capture_context(msg_template="Executing chat logic for {conversation_id=}")
+    async def process_message(self, conversation_id: str, ...):
+    ```
+
+2.  **Raw Payload Logging:**
+    * In the controller/route handler, log the raw received payload.
+    ```python
+    body = await request.json()
+    logger.info("[Debug] Raw Request Body", body=body, headers=dict(request.headers))
+    ```
+
+3.  **Database/LLM Boundaries:**
+    * Log immediately before and after calling `await session.execute(...)` or LLM providers.
+    * Include timing information if latency is the suspected issue.
+
+## Correlation Check
+
+* **Requirement:** Ensure the Frontend `logger.info` and Backend logs share the same `trace_id`.
+* **Verify:** Look for `[trace:...]` in the output. If the ID changes between layers, insert a log specifically checking the `traceparent` header in the backend `request.headers`.

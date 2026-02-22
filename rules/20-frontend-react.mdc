@@ -1,0 +1,61 @@
+---
+description: "Frontend: React, TypeScript, and UI"
+globs: "**/*.tsx", "**/*.ts", "**/frontend/src/**"
+alwaysApply: false
+---
+
+# Frontend: React, TypeScript, and UI
+
+## Tech Stack
+
+- **Framework:** React + Vite
+- **Chat:** Chainlit (headless mode)
+- **Styling:** Tailwind CSS + shadcn/ui
+- **State Management:** Zustand (Client) + TanStack Query (Server state)
+- **Routing:** wouter
+- **Forms:** react-jsonschema-form
+
+## Logging
+- Use `logger` from module `lib/logger.ts` for logging (reason - it implements log shipping via otel)
+
+### User action logging (interactive elements)
+Every interactable element (buttons, links, inputs, etc.) must:
+1. **Have a unique `id`** using the `ui-{page}-{element}-{action}` convention (e.g. `ui-nav-btn-logout`, `ui-dashboard-space-42-btn-chat` for dynamic lists).
+2. **Log user actions** via `logUserAction(action, elementId)` from `@/lib/logger` — the element id is emitted both in the message string and in log attributes under `ui_element_id` for OTEL correlation.
+
+```ts
+import { logUserAction } from '@/lib/logger'
+
+// onClick
+<Button id="ui-my-btn-submit" onClick={() => { logUserAction('user clicked button', 'ui-my-btn-submit'); handleSubmit() }} />
+
+// form submit — add at start of handler
+const onSubmit = async (data) => {
+  logUserAction('user submitted form', 'ui-my-form-submit')
+  // ...
+}
+
+// onChange (text inputs — consider debouncing if high volume)
+onChange={(e) => { logUserAction('user changed input', 'ui-my-input-search'); setSearchQuery(e.target.value) }}
+```
+
+**Action phrases:** `user clicked button` | `user clicked link` | `user clicked card` | `user submitted form` | `user changed input` | `user selected file in`  
+
+## Coding Standards
+
+### Localization
+1. For all strings in UI use Russian language unless specified otherwise.
+
+### React (Custom UI)
+You must generate code that strictly complies with the project's ESLint configuration:
+
+1. **React Hooks:** Adhere strictly to Rules of Hooks. Do not use hooks inside loops or conditions.
+2. **Unused Variables:** Do not declare variables you do not use (or prefix with `_`).
+3. **Imports:** Use absolute paths or consistent relative paths.
+4. **Tailwind:** Use utility classes. Do not write custom CSS unless absolutely necessary.
+5. **Components:** Use functional components. Avoid Prop Types (we use inference).
+6. **Fetching:** Always use `TanStack Query` hooks (`useQuery`, `useMutation`) for data fetching; avoid `useEffect` for API calls.
+
+### Component Export Rules
+- If you generate a React component, ensure it is exported as default unless specified otherwise.
+- When modifying files, always check for existing imports to avoid duplicates.

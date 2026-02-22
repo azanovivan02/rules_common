@@ -1,0 +1,51 @@
+---
+description: General logging standards for Frontend (React) and Backend (FastAPI/Structlog). Always apply these when creating new components or endpoints.
+globs: "**/*.tsx", "**/*.ts", "**/*.py"
+---
+
+# VVChat Logging Standards
+
+## Frontend (React)
+
+**Strict Prohibition:** NEVER use `console.log`, `console.warn`, or `console.error`.
+
+1.  **Import:** Always use the verified wrapper.
+    ```typescript
+    import { logger, logUserAction } from '@/lib/logger'
+    ```
+
+2.  **Structured Logging:**
+    * Pass variables as a **structured object** in the second argument, not string concatenation.
+    * **Bad:** `logger.info('User ' + userId + ' joined')`
+    * **Good:** `logger.info('User joined', { userId, source: 'login_page' })`
+
+3.  **User Actions:**
+    * For any clickable element (buttons, links), use `logUserAction`.
+    * Ensure the `elementId` follows the ID convention: `ui-{page}-{element}-{action}`.
+    ```typescript
+    <Button onClick={() => logUserAction('user clicked button', 'ui-dashboard-btn-create')}>
+    ```
+
+4.  **Error Handling:**
+    * When catching errors, use `errToStringVerbose` if needed
+
+## Backend (Python/FastAPI)
+
+1. **Context Preservation:**
+    * Do **NOT** break the `trace_id` chain.
+    * If spawning background tasks (Celery/Asyncio), pass the context explicitly if not handled by the framework.
+
+2. **Structured Events:**
+    * Event names should be static strings (low cardinality).
+    * Variable data goes into kwargs.
+    ```python
+    # Bad
+    logger.info(f"Processing upload {upload_id}")
+    
+    # Good
+    logger.info("processing_upload_start", upload_id=upload_id, file_type=file_type)
+    ```
+
+3. **Exceptions:**
+    * Use `logger.exception("event_name")` inside except blocks to auto-capture stack traces.
+    * Do **NOT** include exception naively via f-strings `logger.error(f"<message>: {e}") `

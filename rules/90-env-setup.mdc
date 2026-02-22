@@ -1,0 +1,14 @@
+---
+globs: "Dockerfile*", "docker-compose*.yml", "docker-compose*.yaml", "README.md", ".env*", "**/docker/**"
+---
+
+# Environment Setup and Infrastructure
+
+## Environment Setup
+- The app runs entirely locally using Docker Compose for infrastructure (Postgres, Redis).
+- No cloud dependencies other than the LLM API endpoint.
+- Assume `localhost` for all service connections.
+
+## Docker Infrastructure
+- All infrastructure services (PostgreSQL, Redis) run via Docker Compose.
+- Development, local, and production configurations are managed through separate Docker Compose files in the `docker/` directory.
