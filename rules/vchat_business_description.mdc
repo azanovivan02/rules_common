@@ -1,6 +1,6 @@
 ---
 description: "VVChat Project Architecture & Constraints"
-alwaysApply: true
+alwaysApply: false
 ---
 
 # VVChat Project Architecture & Constraints
