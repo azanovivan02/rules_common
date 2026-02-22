@@ -30,8 +30,3 @@ alwaysApply: true
 - NEVER remove comments unless explicitly asked.
 - In Composer mode, focus on "surgical" edits; preserve existing patterns.
 - avoid putting trailing spaces on blank lines
-
-# Library Specific Guidelines
-
-- When writing or refactoring code involving `chainlit`: 
-  - You can reference docs and reports in directory`reference_docs_for_agents/chainlit`
