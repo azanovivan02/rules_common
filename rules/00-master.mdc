@@ -8,11 +8,6 @@ alwaysApply: true
 
 - try to fix things at the root cause, not the symptom
 
-## Anti-Lazy Rule
-
-**Always output full file content. Do not use placeholders like `// ... existing code ...` or `# ... rest of code ...`.
-** When editing files, show the complete implementation, not truncated versions with ellipses.
-
 ## Documentation flow Rules 
 
 - after finishing a task, write a short summary of the changes in markdown format in the `raw_cursor_notes` folder
