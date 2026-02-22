@@ -107,3 +107,8 @@ The system exposes three distinct inbound operational ports:
 * **Frontend Data Fetching:** Frontend components never call `fetch` or `axios` directly inside `useEffect`. They
   strictly rely on the abstractions in `frontend/src/api/` (e.g., `spaces.ts`, `prompts.ts`) which are then wrapped by
   Tanstack Query hooks in `frontend/src/hooks/`.
+
+# Library Specific Guidelines
+
+- When writing or refactoring code involving `chainlit`: 
+  - You can reference docs and reports in directory`reference_docs_for_agents/chainlit`
