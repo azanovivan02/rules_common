@@ -6,34 +6,101 @@ alwaysApply: true
 # VVChat Project Architecture & Constraints
 
 ## Core Strategy
-VVChat is a multi-tenant LLM chat application that allows users to converse with AI and create custom, access-controlled "spaces" configured with specific system prompts and RAG over attached documents. The application features a custom React Single Page Application (Vite, TailwindCSS, shadcn, wouter, Zustand, Tanstack Query) that embeds a Chainlit chat client. The backend is powered by FastAPI and a Chainlit server, utilizing PostgreSQL for relational data, ElasticSearch for text search for vector embeddings, and Celery workers for asynchronous document processing. 
+
+VVChat is a multi-tenant LLM chat application that allows users to converse with AI and create custom,
+access-controlled "spaces" configured with specific system prompts and RAG over attached documents. The application
+features a custom React Single Page Application (Vite, TailwindCSS, shadcn, wouter, Zustand, Tanstack Query) that embeds
+a Chainlit chat client. The backend is powered by FastAPI and a Chainlit server, utilizing PostgreSQL for relational
+data, ElasticSearch for text search for vector embeddings, and Celery workers for asynchronous document processing.
 
 ## Business Entities
-- **User**: An authenticated identity in the system. 
+
+- **User**: An authenticated identity in the system.
 - **Space**: A custom chat environment. One User (owner) can create and manage many Spaces.
 - **SpaceMember**: A relational entity that connects specific Users to a Space to enforce Role-Based Access Control.
 - **Conversation**: A chat thread belonging to a User, which can optionally be scoped to a specific Space.
 - **Message**: A single interaction (user or assistant) belonging to one Conversation.
-- **Upload**: Files (primarily PDFs) attached to a Space or Conversation for RAG. 
+- **Upload**: Files (primarily PDFs) attached to a Space or Conversation for RAG.
 - **Domain Constraints**:
-  - Uploaded documents must always be processed in the background by Celery workers to generate vector embeddings in Qdrant before being queryable.
-  - Access to a Space is strictly governed by `SpaceMember` records or Space Ownership.
-  - Use `Space` for custom contexts; never use synonyms like "Project" or "Gem". Use `Upload` for files, avoiding interchangeable use of "Attachment".
+    - Uploaded documents must always be processed in the background by Celery workers to generate vector embeddings in
+      Qdrant before being queryable.
+    - Access to a Space is strictly governed by `SpaceMember` records or Space Ownership.
+    - Use `Space` for custom contexts; never use synonyms like "Project" or "Gem". Use `Upload` for files, avoiding
+      interchangeable use of "Attachment".
 
-## Crucial Locations
+# Workflow
 
-### Frontend SPA (`frontend/src`)
+### 1. Entry Points
+
+The system exposes three distinct inbound operational ports:
+
+* **FastAPI HTTP API (Synchronous & Async REST):** Standard REST interfaces handling CRUD and metadata operations.
+* *Location:* `src/vvchat/app/adapters/inbound/http/` (e.g., `documents_routes.py`, `prompts_routes.py`,
+  `users_routes.py`).
+
+
+* **Chainlit WebSockets (Streaming Chat):** Mounted sub-application serving real-time chat via WebSocket.
+* *Frontend Connection:* Initialized via `frontend/src/providers/ChainlitProvider.tsx` and managed via the
+  `frontend/src/hooks/useChainlitSocket.ts` hook.
+* *Backend Configuration:* Bound via the chainlit adapter in `src/vvchat/app/adapters/inbound/ui/chainlit/`.
+
+
+* **Celery Workers (Asynchronous Message Queues):** Consumes background processing events from the broker.
+* *Location:* Configured in `src/vvchat/app/adapters/outbound/tasks/celery_app.py`. Entry points for specific job types
+  exist in `upload_processing.py` and `message_processing.py`.
+
+### 2. Control Flow Execution
+
+**Flow A: Document Ingestion & RAG Embedding**
+
+1. **Trigger:** User uploads a PDF via a UI component interacting with `frontend/src/api/documents.ts`.
+2. **API Handling:** Route in `spaces_routes.py` receives the file. It persists file metadata using the
+   `vvchat.app.domain.chat.ports.ChatRepository.create_upload`.
+3. **Task Dispatch:** The API enqueues a job and immediately responds.
+4. **Worker Execution:** `src/vvchat/app/adapters/outbound/tasks/upload_processing.py` picks up the task.
+5. **Embedding Generation:** The document is chunked into. Embeddings are stored in Elasticsearch for retrieval.
+
+**Flow B: Chat Invocation & Context Retrieval**
+
+1. **Trigger:** User submits a prompt. Handled globally via Zustand + headless Chainlit and emitted over the WebSocket.
+2. **Orchestration:** The request hits the Chainlit server and invokes the core application logic.
+3. **Context Assembly:** The chat service fetches the active Space's configuration and attached document constraints
+   using `SpaceRepository` (`src/vvchat/app/adapters/outbound/persistence/postgres/space_repository.py`).
+4. **RAG/LLM Call:** The retrieved context and the custom system prompt are bundled with the user's message and sent to
+   the LLM. The response is streamed back over the WebSocket to the frontend.
+
+### 3. Where Core Logic Lives (Clean Architecture Strictness)
+
+#### Frontend SPA (`frontend/src`)
+
 - **Top-level Routing & Views**: `frontend/src/pages`
 - **Reusable UI Components** (shadcn/Tailwind): `frontend/src/components/ui`
 - **Domain UI Components**: `frontend/src/components/chat`, `frontend/src/components/spaces`
 - **API Clients & API Calls**: `frontend/src/api`
 - **State Management & Data Fetching Hooks** (Tanstack Query, Zustand): `frontend/src/hooks` and `frontend/src/store`
 
-### Backend Application (`src/vvchat/app`)
-- **Domain Models, DTOs & Interfaces (Ports)**: `src/vvchat/app/domain`
-- **Business Logic & Use Cases**: `src/vvchat/app/application/services`
+#### Backend Application (`src/vvchat/app`)
+
+- **Domain Models, DTOs & Interfaces (Ports)**: `src/vvchat/app/domain` Contains pure data structures and Abstract Base Classes (Ports).
+- **Business Logic & Use Cases**: `src/vvchat/app/application/services`. Contains modules like `chat.py` and `auth.py`. This is where multiple domain boundaries are crossed (e.g., taking a Space ID, verifying Auth, triggering a RAG query).
 - **HTTP Endpoints & FastAPI Routes (Inbound)**: `src/vvchat/app/adapters/inbound/http`
 - **Database Models & SQLAlchemy Repositories (Outbound)**: `src/vvchat/app/adapters/outbound/persistence/postgres`
 - **Background Workers & Queues (Celery)**: `src/vvchat/app/adapters/outbound/tasks`
 - **External API Integrations & LLM Triggers**: `src/vvchat/app/adapters/outbound/triggers`
 - **Dependency Injection Setup (Dishka)**: `src/vvchat/app/di`
+
+### 4. How Major Subsystems Connect
+
+* **Dependency Injection (Dishka):** The core mechanism that wires interfaces (Ports) to actual implementations (
+  Adapters).
+* *Location:* `src/vvchat/app/di/container.py`.
+* *Providers:* Specialized providers bind specific contexts, e.g., `persistence_provider.py` binds SQLAlchemy repos to
+  Domain Ports; `rag_provider.py` binds the vector DB clients; `infrastructure_provider.py` manages Redis/Email clients.
+
+
+* **Database Transacting:** Outbound database communication is exclusively routed through SQLAlchemy repositories
+  located in `src/vvchat/app/adapters/outbound/persistence/postgres/` (e.g., `api_token_repository.py`,
+  `auth_repository.py`, `base.py`).
+* **Frontend Data Fetching:** Frontend components never call `fetch` or `axios` directly inside `useEffect`. They
+  strictly rely on the abstractions in `frontend/src/api/` (e.g., `spaces.ts`, `prompts.ts`) which are then wrapped by
+  Tanstack Query hooks in `frontend/src/hooks/`.
