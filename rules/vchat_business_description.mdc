@@ -81,8 +81,11 @@ The system exposes three distinct inbound operational ports:
 
 #### Backend Application (`src/vvchat/app`)
 
-- **Domain Models, DTOs & Interfaces (Ports)**: `src/vvchat/app/domain` Contains pure data structures and Abstract Base Classes (Ports).
-- **Business Logic & Use Cases**: `src/vvchat/app/application/services`. Contains modules like `chat.py` and `auth.py`. This is where multiple domain boundaries are crossed (e.g., taking a Space ID, verifying Auth, triggering a RAG query).
+- **Domain Models, DTOs & Interfaces (Ports)**: `src/vvchat/app/domain` Contains pure data structures and Abstract Base
+  Classes (Ports).
+- **Business Logic & Use Cases**: `src/vvchat/app/application/services`. Contains modules like `chat.py` and `auth.py`.
+  This is where multiple domain boundaries are crossed (e.g., taking a Space ID, verifying Auth, triggering a RAG
+  query).
 - **HTTP Endpoints & FastAPI Routes (Inbound)**: `src/vvchat/app/adapters/inbound/http`
 - **Database Models & SQLAlchemy Repositories (Outbound)**: `src/vvchat/app/adapters/outbound/persistence/postgres`
 - **Background Workers & Queues (Celery)**: `src/vvchat/app/adapters/outbound/tasks`
